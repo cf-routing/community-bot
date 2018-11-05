@@ -40,7 +40,9 @@ func main() {
 
 	client := github.NewClient(tc)
 
-	repos := []string{
+	orgs := make(map[string][]string)
+
+	orgs["cloudfoundry"] = []string{
 		"routing-release", // routing-release and componenets
 		"cf-routing-test-helpers",
 		"cf-tcp-router",
@@ -52,7 +54,6 @@ func main() {
 		"routing-ci",
 		"routing-info",
 		"routing-sample-apps",
-		"uaa-go-client",
 		"routing-perf-release", // routing-perf-release
 		"istio-release",        // istio-release and components
 		"copilot",
@@ -62,42 +63,48 @@ func main() {
 		"nats-release", // nats-release
 	}
 
-	summary := collectIssues(ctx, client, repos, since)
+	orgs["cloudfoundry-incubator"] = []string{
+		"uaa-go-client",
+	}
+	summary := collectIssues(ctx, client, orgs, since)
 	msg := createMessage(summary)
 	fmt.Println(msg.Text)
 }
 
-func collectIssues(ctx context.Context, client *github.Client, repos []string, since int) []RepoSummary {
+func collectIssues(ctx context.Context, client *github.Client, orgs map[string][]string, since int) []RepoSummary {
 	summary := []RepoSummary{}
 
-	for _, repo := range repos {
-		issueSummary := []IssueRecap{}
+	for org, repos := range orgs {
 
-		var options *github.IssueListByRepoOptions
-		if since > 0 {
-			options = &github.IssueListByRepoOptions{
-				Sort:      "updated",
-				Direction: "asc",
-				Since:     time.Now().AddDate(0, 0, -1*since),
-			}
-		} else {
-			options = &github.IssueListByRepoOptions{
-				Sort:      "updated",
-				Direction: "asc",
-			}
-		}
+		for _, repo := range repos {
+			issueSummary := []IssueRecap{}
 
-		issues, _, _ := client.Issues.ListByRepo(ctx, "cloudfoundry", repo, options)
-		for _, issue := range issues {
-			issueSummary = append(issueSummary, IssueRecap{
-				Title: *issue.Title,
-				URL:   *issue.HTMLURL,
+			var options *github.IssueListByRepoOptions
+			if since > 0 {
+				options = &github.IssueListByRepoOptions{
+					Sort:      "updated",
+					Direction: "asc",
+					Since:     time.Now().AddDate(0, 0, -1*since),
+				}
+			} else {
+				options = &github.IssueListByRepoOptions{
+					Sort:      "updated",
+					Direction: "asc",
+				}
+			}
+
+			issues, _, _ := client.Issues.ListByRepo(ctx, org, repo, options)
+			for _, issue := range issues {
+				issueSummary = append(issueSummary, IssueRecap{
+					Title: *issue.Title,
+					URL:   *issue.HTMLURL,
+				})
+			}
+			summary = append(summary, RepoSummary{
+				Name:   repo,
+				Issues: issueSummary,
 			})
 		}
-		summary = append(summary, RepoSummary{
-			Name:   repo,
-			Issues: issueSummary,
-		})
 	}
 
 	return summary
