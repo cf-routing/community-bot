@@ -21,9 +21,16 @@ Run main:
 ```
 GITHUB_ACCESS_TOKEN=${github_access_token} go run main.go
 ```
+
 You can also provide `SINCE=N` where N is the number of days back you would like
 to see issues from. If not provided, the program will return _all_ open issues and
 PRs.
+
+Alternatively, run the following script to get all open issues:
+```
+scripts/get_open_issues.sh
+
+```
 
 ## Usage
 The bot prints out all the repos relevant to the routing team, along with the
