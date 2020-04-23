@@ -36,36 +36,47 @@ func main() {
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: githubToken},
 	)
+
 	tc := oauth2.NewClient(ctx, ts)
-
 	client := github.NewClient(tc)
-
 	orgs := make(map[string][]string)
-
 	orgs["cloudfoundry"] = []string{
-		"routing-release", // routing-release and componenets
+		"cf-networking-notes",
 		"cf-routing-test-helpers",
 		"cf-tcp-router",
+		"copilot",
 		"gorouter",
+		"istio-acceptance-tests",
+		"istio-release", // istio-release and components
+		"istio-scaling",
+		"istio-workspace",
+		"multierror",
+		"nats-release", // nats-release
 		"route-registrar",
 		"routing-acceptance-tests",
 		"routing-api",
 		"routing-api-cli",
 		"routing-ci",
 		"routing-info",
-		"routing-sample-apps",
 		"routing-perf-release", // routing-perf-release
-		"istio-release",        // istio-release and components
-		"copilot",
-		"istio-acceptance-tests",
-		"istio-scaling",
-		"istio-workspace",
-		"nats-release", // nats-release
+		"routing-release",      // routing-release and componenets
+		"routing-sample-apps",
 	}
 
 	orgs["cloudfoundry-incubator"] = []string{
+		"cfnetworking-cli-api",
+		"routing-backup-and-restore-release",
 		"uaa-go-client",
 	}
+
+	orgs["cloudfoundry-attic"] = []string{
+		"tcp-emitter",
+	}
+
+	orgs["cloudfoundry-samples"] = []string{
+		"logging-route-service",
+	}
+
 	summary := collectIssues(ctx, client, orgs, since)
 	msg := createMessage(summary)
 	fmt.Println(msg.Text)
