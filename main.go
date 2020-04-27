@@ -132,17 +132,17 @@ func collectIssues(ctx context.Context, client *github.Client, orgs map[string][
 
 func createMessage(issues []RepoSummary) slack.Message {
 	var msg, repo, issue string
-	msg = "Issues sorted by least recently updated\n\n\n"
+	msg = "\nOpen issues sorted by least recently updated\n\n"
 	for _, r := range issues {
 		issue = ""
 		if len(r.Issues) == 0 {
 			continue
 		}
-		repo = fmt.Sprintf("%s open issues (%d):\n\n", r.Name, len(r.Issues))
+		repo = fmt.Sprintf("%s (%d):\n\n", r.Name, len(r.Issues))
 		for _, i := range r.Issues {
-			issue = issue + fmt.Sprintf("  Issue: %s\n    URL: %s\n    Labels: %v\n", i.Title, i.URL, i.Labels)
+			issue = issue + fmt.Sprintf("%s\n%s\n%v\n\n", i.Title, i.URL, i.Labels)
 		}
-		msg = msg + repo + issue + "\n\n"
+		msg = msg + repo + issue + "\n"
 	}
 
 	return slack.Message{
