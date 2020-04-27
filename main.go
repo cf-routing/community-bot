@@ -42,25 +42,28 @@ func main() {
 	orgs := make(map[string][]string)
 	orgs["cloudfoundry"] = []string{
 		"cf-networking-notes",
+		"cf-networking-release",
 		"cf-routing-test-helpers",
 		"cf-tcp-router",
 		"copilot",
 		"gorouter",
 		"istio-acceptance-tests",
-		"istio-release", // istio-release and components
+		"istio-release",
 		"istio-scaling",
 		"istio-workspace",
 		"multierror",
-		"nats-release", // nats-release
+		"nats-release",
 		"route-registrar",
 		"routing-acceptance-tests",
 		"routing-api",
 		"routing-api-cli",
 		"routing-ci",
 		"routing-info",
-		"routing-perf-release", // routing-perf-release
-		"routing-release",      // routing-release and componenets
+		"routing-perf-release",
+		"routing-release",
 		"routing-sample-apps",
+		"silk",
+		"silk-release",
 	}
 
 	orgs["cloudfoundry-incubator"] = []string{
