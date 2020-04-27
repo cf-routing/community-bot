@@ -13,8 +13,9 @@ import (
 )
 
 type IssueRecap struct {
-	Title string
-	URL   string
+	Title  string
+	URL    string
+	Labels []string
 }
 
 type RepoSummary struct {
@@ -109,9 +110,14 @@ func collectIssues(ctx context.Context, client *github.Client, orgs map[string][
 
 			issues, _, _ := client.Issues.ListByRepo(ctx, org, repo, options)
 			for _, issue := range issues {
+				var labels []string
+				for _, l := range issue.Labels {
+					labels = append(labels, *l.Name)
+				}
 				issueSummary = append(issueSummary, IssueRecap{
-					Title: *issue.Title,
-					URL:   *issue.HTMLURL,
+					Title:  *issue.Title,
+					URL:    *issue.HTMLURL,
+					Labels: labels,
 				})
 			}
 			summary = append(summary, RepoSummary{
@@ -134,7 +140,7 @@ func createMessage(issues []RepoSummary) slack.Message {
 		}
 		repo = fmt.Sprintf("%s open issues (%d):\n\n", r.Name, len(r.Issues))
 		for _, i := range r.Issues {
-			issue = issue + fmt.Sprintf("  Issue: %s\n    URL: %s\n", i.Title, i.URL)
+			issue = issue + fmt.Sprintf("  Issue: %s\n    URL: %s\n    Labels: %v\n", i.Title, i.URL, i.Labels)
 		}
 		msg = msg + repo + issue + "\n\n"
 	}
