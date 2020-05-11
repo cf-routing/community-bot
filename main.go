@@ -7,15 +7,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cf-routing/community-bot/slack"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
 
 type IssueRecap struct {
-	Title  string
-	URL    string
-	Labels []string
+	Title       string
+	URL         string
+	LastUpdated string
+	Labels      []string
 }
 
 type RepoSummary struct {
@@ -83,7 +83,7 @@ func main() {
 
 	summary := collectIssues(ctx, client, orgs, since)
 	msg := createMessage(summary)
-	fmt.Println(msg.Text)
+	fmt.Println(msg)
 }
 
 func collectIssues(ctx context.Context, client *github.Client, orgs map[string][]string, since int) []RepoSummary {
@@ -115,9 +115,10 @@ func collectIssues(ctx context.Context, client *github.Client, orgs map[string][
 					labels = append(labels, *l.Name)
 				}
 				issueSummary = append(issueSummary, IssueRecap{
-					Title:  *issue.Title,
-					URL:    *issue.HTMLURL,
-					Labels: labels,
+					Title:       *issue.Title,
+					URL:         *issue.HTMLURL,
+					LastUpdated: issue.UpdatedAt.Format("2006-01-02"),
+					Labels:      labels,
 				})
 			}
 			summary = append(summary, RepoSummary{
@@ -130,7 +131,7 @@ func collectIssues(ctx context.Context, client *github.Client, orgs map[string][
 	return summary
 }
 
-func createMessage(issues []RepoSummary) slack.Message {
+func createMessage(issues []RepoSummary) string {
 	var msg, repo, issue string
 	msg = "\nOpen issues sorted by least recently updated\n\n"
 	for _, r := range issues {
@@ -140,17 +141,12 @@ func createMessage(issues []RepoSummary) slack.Message {
 		}
 		repo = fmt.Sprintf("%s (%d):\n\n", r.Name, len(r.Issues))
 		for _, i := range r.Issues {
-			issue = issue + fmt.Sprintf("%s\n%s\n%v\n\n", i.Title, i.URL, i.Labels)
+			issue = issue + fmt.Sprintf("%s\n%s\n%v -- Updated: %s\n\n", i.Title, i.URL, i.Labels, i.LastUpdated)
 		}
 		msg = msg + repo + issue + "\n"
 	}
 
-	return slack.Message{
-		Id:      0,
-		Type:    "message",
-		Channel: "#routing",
-		Text:    msg,
-	}
+	return msg
 }
 
 func closeIssue(ctx context.Context, c *github.Client, issue github.Issue) {
