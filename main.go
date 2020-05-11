@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 
@@ -16,11 +17,6 @@ type IssueRecap struct {
 	URL         string
 	LastUpdated string
 	Labels      []string
-}
-
-type RepoSummary struct {
-	Name   string
-	Issues []IssueRecap
 }
 
 func main() {
@@ -86,25 +82,16 @@ func main() {
 	fmt.Println(msg)
 }
 
-func collectIssues(ctx context.Context, client *github.Client, orgs map[string][]string, since int) []RepoSummary {
-	summary := []RepoSummary{}
+func collectIssues(ctx context.Context, client *github.Client, orgs map[string][]string, since int) []IssueRecap {
+	var issueSummaries []IssueRecap
 
 	for org, repos := range orgs {
 
 		for _, repo := range repos {
-			issueSummary := []IssueRecap{}
-
 			var options *github.IssueListByRepoOptions
 			if since > 0 {
 				options = &github.IssueListByRepoOptions{
-					Sort:      "updated",
-					Direction: "asc",
-					Since:     time.Now().AddDate(0, 0, -1*since),
-				}
-			} else {
-				options = &github.IssueListByRepoOptions{
-					Sort:      "updated",
-					Direction: "asc",
+					Since: time.Now().AddDate(0, 0, -1*since),
 				}
 			}
 
@@ -114,54 +101,30 @@ func collectIssues(ctx context.Context, client *github.Client, orgs map[string][
 				for _, l := range issue.Labels {
 					labels = append(labels, *l.Name)
 				}
-				issueSummary = append(issueSummary, IssueRecap{
+				issueSummaries = append(issueSummaries, IssueRecap{
 					Title:       *issue.Title,
 					URL:         *issue.HTMLURL,
 					LastUpdated: issue.UpdatedAt.Format("2006-01-02"),
 					Labels:      labels,
 				})
 			}
-			summary = append(summary, RepoSummary{
-				Name:   repo,
-				Issues: issueSummary,
-			})
 		}
 	}
 
-	return summary
+	return issueSummaries
 }
 
-func createMessage(issues []RepoSummary) string {
-	var msg, repo, issue string
-	msg = "\nOpen issues sorted by least recently updated\n\n"
-	for _, r := range issues {
-		issue = ""
-		if len(r.Issues) == 0 {
-			continue
-		}
-		repo = fmt.Sprintf("%s (%d):\n\n", r.Name, len(r.Issues))
-		for _, i := range r.Issues {
-			issue = issue + fmt.Sprintf("%s\n%s\n%v -- Updated: %s\n\n", i.Title, i.URL, i.Labels, i.LastUpdated)
-		}
-		msg = msg + repo + issue + "\n"
+func createMessage(issues []IssueRecap) string {
+	var msg string
+	msg = "\nOpen issues sorted by most recently updated\n\n"
+
+	sort.Slice(issues, func(i, j int) bool {
+		return issues[i].LastUpdated > issues[j].LastUpdated
+	})
+
+	for _, i := range issues {
+		msg = msg + fmt.Sprintf("%s: %s %v\n%s\n\n", i.LastUpdated, i.Labels, i.Title, i.URL)
 	}
 
 	return msg
-}
-
-func closeIssue(ctx context.Context, c *github.Client, issue github.Issue) {
-	msg := "Closing due to lack of activity. Please re-open if the issue persists"
-	_, _, err := c.Issues.CreateComment(ctx, "cloudfoundry", *issue.Repository.Name, *issue.Number, &github.IssueComment{
-		Body: &msg,
-	})
-	if err != nil {
-		panic(err)
-	}
-	newState := "closed"
-	_, _, err = c.Issues.Edit(ctx, "cloudfoundry", *issue.Repository.Name, *issue.Number, &github.IssueRequest{
-		State: &newState,
-	})
-	if err != nil {
-		panic(err)
-	}
 }
