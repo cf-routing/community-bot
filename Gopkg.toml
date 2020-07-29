@@ -25,17 +25,17 @@
 #   unused-packages = true
 
 
-[[constraint]]
-  name = "github.com/google/go-github"
-  version = "18.2.0"
+# [[constraint]]
+#   name = "github.com/google/go-github"
+#   version = "18.2.0"
 
-[[constraint]]
-  branch = "master"
-  name = "golang.org/x/net"
+# [[constraint]]
+#   branch = "master"
+#   name = "golang.org/x/net"
 
-[[constraint]]
-  branch = "master"
-  name = "golang.org/x/oauth2"
+# [[constraint]]
+#   branch = "master"
+#   name = "golang.org/x/oauth2"
 
 [prune]
   go-tests = true
