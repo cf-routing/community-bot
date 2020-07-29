@@ -1,18 +1,6 @@
 # Community Bot
 A script that helps the CF Networking team stay updated on Github Community issues and PRs.
 
-## Getting Started
-To get started, make sure you clone this repo into your `GOPATH`:
-```
-cd $GOPATH
-mkdir -p src/github.com/cf-routing
-cd src/github.com/cf-routing
-git clone git@github.com:cf-routing/community-bot.git
-cd community-bot
-go get github.com/golang/dep/cmd/dep
-dep ensure
-```
-
 ## Usage
 The bot prints out all the repos relevant to the routing team, along with the
 issues and PRs associated with each repo. The issues/PRs are sorted by Least

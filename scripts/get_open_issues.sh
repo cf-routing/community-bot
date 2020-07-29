@@ -8,4 +8,4 @@ then
 fi
 
 token=$(lpass show -j "Github - Routing CI Bot" | jq -r ".[0].note" | awk '{print $NF}')
-GITHUB_ACCESS_TOKEN="${token}" go run "${GOPATH}/src/github.com/cf-routing/community-bot/main.go"
+GITHUB_ACCESS_TOKEN="${token}" go run main.go
